@@ -15,7 +15,7 @@ The MCP server now works correctly with Cursor. The JSON communication issue has
 1. **Install and configure:**
 ```bash
 # Clone and setup
-git clone https://github.com/yourusername/shopify-checkout-mcp-tool.git
+git clone https://github.com/shandut/Shopify-Checkout-Branding-MCP-Tool.git
 cd shopify-checkout-mcp-tool
 npm install
 npm run build
@@ -96,7 +96,7 @@ node test-http.js
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/shopify-checkout-mcp-tool.git
+git clone https://github.com/shandut/Shopify-Checkout-Branding-MCP-Tool.git
 cd shopify-checkout-mcp-tool
 ```
 
