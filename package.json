@@ -1,0 +1,37 @@
+{
+  "name": "shopify-checkout-mcp-tool",
+  "version": "1.0.0",
+  "description": "MCP server for managing Shopify checkout branding",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:http": "PORT=8787 node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "shopify",
+    "checkout",
+    "branding"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "@modelcontextprotocol/sdk": "^1.21.1",
+    "@types/form-data": "^2.2.1",
+    "@types/node": "^24.10.1",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.6.2",
+    "form-data": "^4.0.4",
+    "pino": "^10.1.0",
+    "pino-pretty": "^13.1.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3",
+    "undici": "^7.16.0",
+    "zod": "^3.25.76"
+  }
+}
