@@ -470,7 +470,7 @@ export class BrandingService {
       };
     }>(QUERIES.STAGED_UPLOAD_CREATE, {
       input: [{
-        resource: 'GENERIC_FILE',  // Use GENERIC_FILE for fonts
+        resource: 'FILE',  // Use FILE for font uploads
         filename,
         mimeType,
         httpMethod: 'POST'
@@ -526,7 +526,7 @@ export class BrandingService {
       };
     }>(QUERIES.CREATE_FILE, {
       files: [{
-        contentType: 'GENERIC_FILE',  // GENERIC_FILE for fonts
+        contentType: 'FILE',  // FILE for generic files including fonts
         originalSource: target.resourceUrl,
         alt: filename
       }]

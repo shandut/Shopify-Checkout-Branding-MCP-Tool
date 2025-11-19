@@ -1,6 +1,6 @@
 {
   "name": "shopify-checkout-mcp-tool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server for managing Shopify checkout branding",
   "main": "dist/index.js",
   "scripts": {
