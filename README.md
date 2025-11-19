@@ -53,10 +53,13 @@ node test-http.js
   - **🔒 Safety Feature**: Automatically targets TEST/draft profile by default
   - Use `useProductionProfile: true` to explicitly update live checkout
 - **Upload Logos**: Stream images from URLs directly to Shopify CDN
+- **Upload Custom Fonts**: Upload WOFF/WOFF2/TTF/OTF fonts for unique typography
 
 ### Styling Capabilities
 - **Colors**: Background, text, primary (buttons), surface colors with hex validation
-- **Typography**: Font families, weights (100-900), base size (12-16), ratios (1.0-1.5)
+- **Typography**: Font families (Shopify or custom), weights (100-900), base size (12-16), ratios (1.0-1.5)
+  - Custom font support for primary (body text) and secondary (headings) surfaces
+  - Configurable font loading strategies (BLOCK, SWAP, FALLBACK, OPTIONAL)
 - **Corner Radius**: NONE, SMALL, BASE, LARGE for all elements
 - **Shadows**: 5 levels (SMALL_100, SMALL_200, BASE, LARGE_100, LARGE_200)
 - **Padding**: 14 variants (NONE through LARGE_500)
@@ -204,6 +207,22 @@ Uploads an image from a URL to Shopify Files.
 
 **Output**: Image ID and CDN URL for use in branding updates
 
+### 5. `shopify_upload_custom_font_from_url`
+Uploads a custom font file from a URL to Shopify Files for use in checkout typography.
+
+**Input**:
+- `url` (string, required): Public HTTPS URL of the font file (WOFF, WOFF2, TTF, or OTF)
+- `filename` (string, optional): Desired filename for the font
+- `mimeType` (string, optional): Font MIME type (auto-detected if not provided)
+- `fontWeight` (number, optional): Font weight (100-900, default 400 for regular, 700 for bold)
+- `isBold` (boolean, optional): Mark as bold variant (sets weight to 700)
+
+**Output**: 
+- `genericFileId`: File ID to use in checkout branding configuration
+- `url`: CDN URL of the uploaded font
+- `weight`: Font weight value
+- `filename`: The filename of the uploaded font
+
 ## 💡 Usage Examples
 
 ### Via MCP (in Claude Desktop)
@@ -256,6 +275,37 @@ curl -X POST http://localhost:8787/files \
   -d '{
     "url": "https://example.com/new-logo.png",
     "filename": "checkout-logo.png"
+  }'
+
+# Upload custom fonts
+curl -X POST http://localhost:8787/fonts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/myfont-regular.woff2",
+    "fontWeight": 400
+  }'
+
+# Apply custom font to checkout
+curl -X POST http://localhost:8787/branding \
+  -H "Content-Type: application/json" \
+  -d '{
+    "designSystem": {
+      "typography": {
+        "primary": {
+          "customFontGroup": {
+            "base": {
+              "genericFileId": "gid://shopify/GenericFile/123456",
+              "weight": 400
+            },
+            "bold": {
+              "genericFileId": "gid://shopify/GenericFile/789012",
+              "weight": 700
+            },
+            "loadingStrategy": "SWAP"
+          }
+        }
+      }
+    }
   }'
 ```
 

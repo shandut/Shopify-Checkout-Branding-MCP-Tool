@@ -426,6 +426,128 @@ export class BrandingService {
     };
   }
   
+  async uploadCustomFontFromUrl(input: {
+    url: string;
+    filename?: string;
+    mimeType?: string;
+    fontWeight?: number;
+    isBold?: boolean;
+  }) {
+    // Extract filename from URL if not provided
+    const filename = input.filename || input.url.split('/').pop() || 'custom-font.woff2';
+    
+    // Determine mime type based on file extension if not provided
+    let mimeType = input.mimeType;
+    if (!mimeType) {
+      if (filename.endsWith('.woff2')) {
+        mimeType = 'font/woff2';
+      } else if (filename.endsWith('.woff')) {
+        mimeType = 'font/woff';
+      } else if (filename.endsWith('.ttf')) {
+        mimeType = 'font/ttf';
+      } else if (filename.endsWith('.otf')) {
+        mimeType = 'font/otf';
+      } else {
+        mimeType = 'application/octet-stream';
+      }
+    }
+    
+    // Step 1: Create staged upload for generic file
+    const stagedUploadResponse = await this.shopify.gql<{
+      stagedUploadsCreate: {
+        stagedTargets: Array<{
+          url: string;
+          resourceUrl: string;
+          parameters: Array<{
+            name: string;
+            value: string;
+          }>;
+        }>;
+        userErrors: Array<{
+          field?: string[];
+          message: string;
+        }>;
+      };
+    }>(QUERIES.STAGED_UPLOAD_CREATE, {
+      input: [{
+        resource: 'GENERIC_FILE',  // Use GENERIC_FILE for fonts
+        filename,
+        mimeType,
+        httpMethod: 'POST'
+      }]
+    });
+    
+    if (stagedUploadResponse.stagedUploadsCreate?.userErrors?.length > 0) {
+      const errors = stagedUploadResponse.stagedUploadsCreate.userErrors
+        .map(e => `${e.field?.join('.')}: ${e.message}`)
+        .join(', ');
+      throw new Error(`Staged upload failed: ${errors}`);
+    }
+    
+    const target = stagedUploadResponse.stagedUploadsCreate.stagedTargets[0];
+    
+    // Step 2: Download font from URL
+    const fontResponse = await fetch(input.url);
+    if (!fontResponse.ok) {
+      throw new Error(`Failed to download font from URL: ${fontResponse.statusText}`);
+    }
+    const fontBuffer = await fontResponse.arrayBuffer();
+    
+    // Step 3: Upload to Shopify's staged URL
+    const formData = new FormData();
+    target.parameters.forEach(param => {
+      formData.append(param.name, param.value);
+    });
+    formData.append('file', new Blob([fontBuffer], { type: mimeType }), filename);
+    
+    const uploadResponse = await fetch(target.url, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to upload font file to Shopify: ${uploadResponse.statusText}`);
+    }
+    
+    // Step 4: Create generic file in Shopify
+    const fileCreateResponse = await this.shopify.gql<{
+      fileCreate: {
+        files: Array<{
+          id: string;
+          alt?: string;
+          url?: string;
+          fileStatus?: string;
+          __typename: string;
+        }>;
+        userErrors: Array<{
+          field?: string[];
+          message: string;
+        }>;
+      };
+    }>(QUERIES.CREATE_FILE, {
+      files: [{
+        contentType: 'GENERIC_FILE',  // GENERIC_FILE for fonts
+        originalSource: target.resourceUrl,
+        alt: filename
+      }]
+    });
+    
+    if (fileCreateResponse.fileCreate?.userErrors?.length > 0) {
+      const errors = fileCreateResponse.fileCreate.userErrors
+        .map(e => `${e.field?.join('.')}: ${e.message}`)
+        .join(', ');
+      throw new Error(`File creation failed: ${errors}`);
+    }
+    
+    const file = fileCreateResponse.fileCreate.files[0];
+    return {
+      genericFileId: file.id,
+      url: file.url || '',
+      weight: input.fontWeight || (input.isBold ? 700 : 400),
+      filename
+    };
+  }
+  
   // Helper to map new position values to legacy ones for backward compatibility
   private mapHeaderPositionToLegacy(position?: string): string | undefined {
     if (!position) return undefined;

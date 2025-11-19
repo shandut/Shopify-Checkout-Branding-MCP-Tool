@@ -576,8 +576,25 @@ export const uploadLogoFromUrlOutputSchema = z.object({
   url: z.string(),
 });
 
+// Upload custom font input/output
+export const uploadCustomFontFromUrlInputSchema = z.object({
+  url: httpsUrlSchema,
+  filename: z.string().optional().describe('Optional filename for the font'),
+  mimeType: z.string().optional().describe('Optional MIME type (auto-detected from extension if not provided)'),
+  fontWeight: z.number().optional().describe('Font weight (100-900, default 400 for regular, 700 for bold)'),
+  isBold: z.boolean().optional().describe('Whether this is a bold font variant (sets weight to 700 if true)'),
+});
+
+export const uploadCustomFontFromUrlOutputSchema = z.object({
+  genericFileId: z.string(),
+  url: z.string(),
+  weight: z.number(),
+  filename: z.string(),
+});
+
 // Export types from schemas
 export type UpdateCheckoutBrandingInput = z.infer<typeof updateCheckoutBrandingInputSchema>;
 export type ListCheckoutProfilesOutput = z.infer<typeof listCheckoutProfilesOutputSchema>;
 export type GetCheckoutBrandingOutput = z.infer<typeof getCheckoutBrandingOutputSchema>;
 export type UploadLogoFromUrlOutput = z.infer<typeof uploadLogoFromUrlOutputSchema>;
+export type UploadCustomFontFromUrlOutput = z.infer<typeof uploadCustomFontFromUrlOutputSchema>;

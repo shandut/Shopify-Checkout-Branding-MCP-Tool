@@ -13,6 +13,7 @@ import {
   getCheckoutBrandingInputSchema,
   updateCheckoutBrandingInputSchema,
   uploadLogoFromUrlInputSchema,
+  uploadCustomFontFromUrlInputSchema,
 } from './schemas.js';
 
 // Simple Zod to JSON Schema converter
@@ -248,6 +249,87 @@ export function createMCPServer(): Server {
       2. Apply to checkout: shopify_update_checkout_branding(imageId: returned_id, logoWidth: 150)`,
       inputSchema: zodToJsonSchema(uploadLogoFromUrlInputSchema),
     },
+    {
+      name: 'shopify_upload_custom_font_from_url',
+      description: `Upload a custom font from a public HTTPS URL to Shopify Files for use in checkout branding.
+      
+      🎨 CUSTOM FONTS ENABLE UNIQUE TYPOGRAPHY:
+      Custom fonts allow merchants to use their brand's specific typeface in checkout, creating a cohesive brand experience.
+      
+      📋 REQUIREMENTS:
+      - Font must be in WOFF, WOFF2, TTF, or OTF format (WOFF2 recommended for best performance)
+      - URL must be publicly accessible (no authentication)
+      - URL must use HTTPS protocol
+      - Store must have appropriate webfont license for commercial use
+      
+      🔄 PROCESS:
+      1. Downloads font from provided URL
+      2. Uploads to Shopify's CDN as a generic file
+      3. Returns genericFileId to use with checkout branding
+      
+      ⚙️ PARAMETERS:
+      - url: HTTPS URL of the font file (required)
+      - filename: Optional custom filename (auto-extracted from URL if not provided)
+      - mimeType: Optional MIME type (auto-detected from extension: woff2, woff, ttf, otf)
+      - fontWeight: Optional weight value 100-900 (default: 400 for regular, 700 for bold)
+      - isBold: Optional boolean to mark as bold variant (sets weight to 700)
+      
+      💡 USAGE WITH CHECKOUT BRANDING:
+      After uploading, use the returned genericFileId in shopify_update_checkout_branding:
+      
+      Example for primary font (body text):
+      {
+        "designSystem": {
+          "typography": {
+            "primary": {
+              "customFontGroup": {
+                "base": {
+                  "genericFileId": "returned_id",
+                  "weight": 400
+                },
+                "bold": {
+                  "genericFileId": "returned_bold_id",
+                  "weight": 700
+                },
+                "loadingStrategy": "SWAP"
+              }
+            }
+          }
+        }
+      }
+      
+      Example for secondary font (headings):
+      {
+        "designSystem": {
+          "typography": {
+            "secondary": {
+              "customFontGroup": {
+                "base": {
+                  "genericFileId": "returned_id",
+                  "weight": 400
+                },
+                "bold": {
+                  "genericFileId": "returned_bold_id",
+                  "weight": 700
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      🚀 LOADING STRATEGIES:
+      - BLOCK: Block text rendering until font loads (not recommended)
+      - SWAP: Show fallback font immediately, swap when custom font loads (recommended)
+      - FALLBACK: Short block period, then fallback if not loaded
+      - OPTIONAL: Very short block period, may not swap if slow to load
+      
+      📝 COMPLETE WORKFLOW:
+      1. Upload regular font: shopify_upload_custom_font_from_url(url: "https://example.com/myfont-regular.woff2")
+      2. Upload bold font: shopify_upload_custom_font_from_url(url: "https://example.com/myfont-bold.woff2", isBold: true)
+      3. Apply to checkout: shopify_update_checkout_branding with customFontGroup configuration`,
+      inputSchema: zodToJsonSchema(uploadCustomFontFromUrlInputSchema),
+    },
   ];
 
   // Handle list tools request
@@ -288,6 +370,12 @@ export function createMCPServer(): Server {
         case 'shopify_upload_logo_from_url': {
           const input = uploadLogoFromUrlInputSchema.parse(args || {});
           result = await brandingService.uploadLogoFromUrl(input);
+          break;
+        }
+        
+        case 'shopify_upload_custom_font_from_url': {
+          const input = uploadCustomFontFromUrlInputSchema.parse(args || {});
+          result = await brandingService.uploadCustomFontFromUrl(input);
           break;
         }
         
